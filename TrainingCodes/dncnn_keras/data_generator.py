@@ -82,23 +82,31 @@ def gen_patches(file_name):
                 
     return patches
 
-def datagenerator(data_dir='data/Train400',verbose=False):
+def datagenerator(data_dir='data/Train400', batch_size=128, verbose=False):
+    file_list = glob.glob(data_dir + '/*.png')  # get name list of all .png files
     
-    file_list = glob.glob(data_dir+'/*.png')  # get name list of all .png files
-    # initrialize
     data = []
-    # generate patches
-    for i in range(len(file_list)):
-        patch = gen_patches(file_list[i])
-        data.append(patch)
+    
+    for i, file_name in enumerate(file_list):
+        patches = gen_patches(file_name)
+        data.extend(patches)
+        
         if verbose:
-            print(str(i+1)+'/'+ str(len(file_list)) + ' is done ^_^')
+            print(f"{i+1}/{len(file_list)} is done ^_^")
+    
+    # Convert the list of patches to a NumPy array
     data = np.array(data, dtype='uint8')
-    data = data.reshape((data.shape[0]*data.shape[1],data.shape[2],data.shape[3],1))
-    discard_n = len(data)-len(data)//batch_size*batch_size;
-    data = np.delete(data,range(discard_n),axis = 0)
+    
+    # Calculate how many patches to discard for batch compatibility
+    discard_n = len(data) - len(data) // batch_size * batch_size
+    data = data[:-discard_n]
+    
+    # Reshape data if patches have a consistent shape
+    data = data.reshape((-1, patch_size, patch_size, 1))
+    
     print('^_^-training data finished-^_^')
     return data
+
 
 if __name__ == '__main__':   
 
